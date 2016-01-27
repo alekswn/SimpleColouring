@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.WindowManager;
 
 public class ShaderedCamera extends Activity {
+    RenderView mRenderView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -15,6 +16,8 @@ public class ShaderedCamera extends Activity {
         int ui = getWindow().getDecorView().getSystemUiVisibility();
         ui = ui | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         getWindow().getDecorView().setSystemUiVisibility(ui);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        setContentView(R.layout.main_layout);
+        mRenderView = (RenderView)findViewById(R.id.render_view);
     }
 }
