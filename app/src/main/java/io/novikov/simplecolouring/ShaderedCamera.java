@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.View;
-import android.view.WindowManager;
 
 public class ShaderedCamera extends Activity {
     RenderView mRenderView;
@@ -19,5 +18,21 @@ public class ShaderedCamera extends Activity {
 
         setContentView(R.layout.main_layout);
         mRenderView = (RenderView)findViewById(R.id.render_view);
+    }
+
+    @Override
+    protected void onResume()
+    {
+        // The activity must call the GL surface view's onResume() on activity onResume().
+        super.onResume();
+        mRenderView.onResume();
+    }
+
+    @Override
+    protected void onPause()
+    {
+        // The activity must call the GL surface view's onPause() on activity onPause().
+        super.onPause();
+        mRenderView.onPause();
     }
 }

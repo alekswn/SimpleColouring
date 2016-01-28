@@ -1,14 +1,17 @@
 package io.novikov.simplecolouring;
 
+import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLException;
 
 public abstract class Shader {
     private static final String TAG = "Shader";
+    protected static final int BYTES_PER_FLOAT = 4;
 
+    public abstract void init(Context context);
     public abstract void draw();
 
-    private static int prepareProgram(String vertexShaderCode, String fragmentShaderCode)
+    protected static int prepareProgram(String vertexShaderCode, String fragmentShaderCode)
                                                                                 throws GLException{
         int vertexShader = 0;
         int fragmentShader = 0;
@@ -38,7 +41,7 @@ public abstract class Shader {
         GLES20.glGetProgramiv(programId, GLES20.GL_VALIDATE_STATUS, validateStatus, 0);
         if (validateStatus[0] == 0) {
             throw new GLException(GLES20.glGetError(), "Program is not valid: " +
-                                                        GLES20.glGetProgramInfoLog(programId));
+                    GLES20.glGetProgramInfoLog(programId));
         }
     }
 
@@ -54,9 +57,9 @@ public abstract class Shader {
         final int[] linkStatus = new int[1];
         GLES20.glGetProgramiv(programId, GLES20.GL_LINK_STATUS, linkStatus, 0);
         if (linkStatus[0] == 0) {
+            final String info = GLES20.glGetProgramInfoLog(programId);
             GLES20.glDeleteProgram(programId);
-            throw new GLException(GLES20.glGetError(), "Could not create new shader: " +
-                    GLES20.glGetProgramInfoLog(programId));
+            throw new GLException(GLES20.glGetError(), "Could not link the program: " + info);
         }
 
         return programId;
@@ -74,9 +77,10 @@ public abstract class Shader {
         final int[] compileStatus = new int[1];
         GLES20.glGetShaderiv(shaderObjectId, GLES20.GL_COMPILE_STATUS, compileStatus, 0);
         if (compileStatus[0] == 0) {
+            final String info = GLES20.glGetShaderInfoLog(shaderObjectId);
             GLES20.glDeleteShader(shaderObjectId);
-            throw new GLException(GLES20.glGetError(), "Could not create new shader: " +
-                                                        GLES20.glGetShaderInfoLog(shaderObjectId));
+            throw new GLException(GLES20.glGetError(), "Could not compile a shader: type:" + type
+                                                        + "; info:"  + info);
         }
         return shaderObjectId;
     }

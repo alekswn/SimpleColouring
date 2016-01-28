@@ -4,16 +4,12 @@ import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
+import android.view.Surface;
 
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
+public class RenderView extends GLSurfaceView {
+    ShaderRenderer mRenderer;
+    SurfaceTexture mSurfaceTexture;
 
-/**
- * Created by al on 1/27/16.
- */
-public class RenderView extends GLSurfaceView
-{
-    Renderer mRenderer;
 
     /**
      * Standard View constructor. In order to render something, you
@@ -25,28 +21,24 @@ public class RenderView extends GLSurfaceView
     public RenderView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        mRenderer = new Renderer() {
-            @Override
-            public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-
-            }
-
-            @Override
-            public void onSurfaceChanged(GL10 gl, int width, int height) {
-
-            }
-
-            @Override
-            public void onDrawFrame(GL10 gl) {
-
-            }
-        };
+        mRenderer = new ShaderRenderer(this);
 
         setPreserveEGLContextOnPause(true);
         setEGLContextClientVersion(2);
         setRenderer(mRenderer);
-        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);//TODO check for resource bloat
+    }
+
+    public void onSurfaceCreated(int texID) {
+        mSurfaceTexture = new SurfaceTexture(texID);
+
+        mSurfaceTexture.setDefaultBufferSize(100, 100);
+        Surface surface = new Surface(mSurfaceTexture);
+
 
     }
 
+    public void onSurfaceChanged( int width, int height) {
+        //TODO
+    }
 }
