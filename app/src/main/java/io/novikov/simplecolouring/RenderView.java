@@ -2,13 +2,17 @@ package io.novikov.simplecolouring;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
+import android.hardware.camera2.CameraAccessException;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.view.Surface;
 
 public class RenderView extends GLSurfaceView {
+    final static String TAG = "RenderView";
+
     ShaderRenderer mRenderer;
     SurfaceTexture mSurfaceTexture;
+    CameraHandler  mCameraHandler;
 
 
     /**
@@ -31,14 +35,18 @@ public class RenderView extends GLSurfaceView {
 
     public void onSurfaceCreated(int texID) {
         mSurfaceTexture = new SurfaceTexture(texID);
-
-        mSurfaceTexture.setDefaultBufferSize(100, 100);
-        Surface surface = new Surface(mSurfaceTexture);
-
-
+        mCameraHandler = new CameraHandler(getContext().getApplicationContext(), mSurfaceTexture);
+        try {
+            mCameraHandler.start();
+        } catch ( CameraAccessException e) {
+            Util.LogError(TAG, "Exception in CameraHandler : " + e.toString());
+        }
     }
 
     public void onSurfaceChanged( int width, int height) {
-        //TODO
+        try {
+            mCameraHandler.restart();
+        } catch (CameraAccessException e) {
+            Util.LogError(TAG, "Exception in CameraHandler : " + e.toString());        }
     }
 }
