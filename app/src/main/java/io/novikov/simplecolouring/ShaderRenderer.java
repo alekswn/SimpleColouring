@@ -89,7 +89,7 @@ public class ShaderRenderer implements GLSurfaceView.Renderer
         renderView = view;
         glTexture = new GLTexture();
         context = view.getContext().getApplicationContext();
-        shader = new PassthroughSurfaceShader();
+        shader = new SimpleColouringPageSurfaceShader();
         isUpdateNeeded = new AtomicBoolean(true);
     }
 

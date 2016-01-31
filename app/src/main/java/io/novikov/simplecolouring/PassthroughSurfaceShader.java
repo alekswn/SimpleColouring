@@ -10,30 +10,29 @@ import java.nio.FloatBuffer;
 
 public class PassthroughSurfaceShader extends Shader {
     private static final String TAG = "PassthroughSurfaceShader";
-    private static final int POSITION_COMPONENT_COUNT = 2;
+    protected static final int POSITION_COMPONENT_COUNT = 2;
 
     // Transformation matrix
     //private final float[] mtrxProjectionAndView = new float[16];
 
-    private  int programId;
-    private  FloatBuffer vertexData;
-    private  FloatBuffer uvBuffer;
+    protected  int programId;
+    protected  FloatBuffer vertexData;
+    protected  FloatBuffer uvBuffer;
 
-    public void init(Context context) {
-        Util.LogDebug(TAG, "init()");
+    protected void initProgram(Context context) {
         final String vertexShaderCode = Util.readTextFileFromResource(context,
-                                                                      R.raw.passthrough_vertex_shader);
+                R.raw.passthrough_vertex_shader);
         final String fragmentShaderCode = Util.readTextFileFromResource(context,
-                                                                    R.raw.passthrough_fragment_shader);
+                R.raw.passthrough_fragment_shader);
         programId = Shader.prepareProgram(vertexShaderCode, fragmentShaderCode);
+    }
 
-        GLES20.glUseProgram(programId);
-
+    protected void initBuffers() {
         //prepare vertex data array
         float[] Vertices = { 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f };
 
         vertexData = ByteBuffer.allocateDirect(Vertices.length * BYTES_PER_FLOAT)
-                        .order(ByteOrder.nativeOrder()).asFloatBuffer();
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
         vertexData.put(Vertices);
         vertexData.position(0);
 
@@ -42,10 +41,17 @@ public class PassthroughSurfaceShader extends Shader {
 
         // The texture buffer
         uvBuffer = ByteBuffer.allocateDirect(uvs.length * BYTES_PER_FLOAT)
-                                    .order(ByteOrder.nativeOrder()).asFloatBuffer();
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
         uvBuffer.put(uvs);
         uvBuffer.position(0);
+    }
 
+    public void init(Context context) {
+        Util.LogDebug(TAG, "init()");
+        initProgram(context);
+        GLES20.glUseProgram(programId);
+
+        initBuffers();
     }
 
     @Override
