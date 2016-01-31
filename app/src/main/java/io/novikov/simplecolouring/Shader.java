@@ -9,7 +9,8 @@ public abstract class Shader {
     protected static final int BYTES_PER_FLOAT = 4;
 
     public abstract void init(Context context);
-    public abstract void draw();
+    public abstract void draw(int texId);
+    public abstract void resize(int width, int height);
 
     protected static int prepareProgram(String vertexShaderCode, String fragmentShaderCode)
                                                                                 throws GLException{

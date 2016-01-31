@@ -2,7 +2,7 @@
 
 precision mediump float;
 
-uniform samplerExternalOES sTexture;
+uniform sampler2D sTexture;
 varying vec2 vTextureCoord;
 
 void main(){

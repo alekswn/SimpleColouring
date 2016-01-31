@@ -42,6 +42,8 @@ import java.util.concurrent.TimeUnit;
 
 public class CameraHandler {
 
+    private static final String TAG = "CameraHandler";
+
     /**
      * Conversion from screen rotation to JPEG orientation.
      */
@@ -53,11 +55,6 @@ public class CameraHandler {
         ORIENTATIONS.append(Surface.ROTATION_180, 270);
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
-
-    /**
-     * Tag for the {@link Log}.
-     */
-    private static final String TAG = "CameraHandler";
 
     /**
      * Camera state: Showing camera preview.
@@ -123,6 +120,7 @@ public class CameraHandler {
 
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
+            Util.LogDebug(TAG, "StateCallback.onOpened() " + cameraDevice.getId());
             // This method is called when the camera is opened.  We start camera preview here.
             mCameraOpenCloseLock.release();
             mCameraDevice = cameraDevice;
@@ -131,6 +129,7 @@ public class CameraHandler {
 
         @Override
         public void onDisconnected(@NonNull CameraDevice cameraDevice) {
+            Util.LogDebug(TAG, "StateCallback.onDisconnected() " + cameraDevice.getId());
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
@@ -138,6 +137,7 @@ public class CameraHandler {
 
         @Override
         public void onError(@NonNull CameraDevice cameraDevice, int error) {
+            Util.LogDebug(TAG, "StateCallback.onError() " + cameraDevice.getId() + error);
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
@@ -325,16 +325,19 @@ public class CameraHandler {
     }
 
     public void start() throws CameraAccessException {
+        Util.LogDebug(TAG, "start() ");
         startBackgroundThread();
         openCamera();
     }
 
     public void stop() {
+        Util.LogDebug(TAG, "stop() ");
         closeCamera();
         stopBackgroundThread();
     }
 
     public void restart(/*int width, int heigth*/) throws CameraAccessException {
+        Util.LogDebug(TAG, "restart() ");
         stop();
         start();
     }
@@ -344,6 +347,7 @@ public class CameraHandler {
      *
      */
     private void setUpCameraOutputs() throws CameraAccessException {
+        Util.LogDebug(TAG, "setUpCameraOutputs()");
         WindowManager windowManager = (WindowManager) mApplicationContext
                                                     .getSystemService(Context.WINDOW_SERVICE);
         CameraManager manager = (CameraManager) mApplicationContext
@@ -353,11 +357,12 @@ public class CameraHandler {
             CameraCharacteristics characteristics
                     = manager.getCameraCharacteristics(cameraId);
 /*
-                // We don't use a front facing camera in this sample.
-                Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    continue;
-                }
+            // We don't use a front facing camera in this sample.
+            //TODO Fix needed for the case of no camera
+            Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+            if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                continue;
+            }
 */
             StreamConfigurationMap map = characteristics.get(
                     CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -449,6 +454,7 @@ public class CameraHandler {
      * Opens the camera specified by {@link CameraHandler#mCameraId}.
      */
     private void openCamera() throws CameraAccessException {
+        Util.LogDebug(TAG, "openCamera()");
         setUpCameraOutputs();
         CameraManager manager = (CameraManager) mApplicationContext
                                                     .getSystemService(Context.CAMERA_SERVICE);
@@ -468,6 +474,7 @@ public class CameraHandler {
      * Closes the current {@link CameraDevice}.
      */
     private void closeCamera() {
+        Util.LogDebug(TAG, "closeCamera()");
         try {
             mCameraOpenCloseLock.acquire();
             if (null != mCaptureSession) {
@@ -516,6 +523,7 @@ public class CameraHandler {
      * Creates a new {@link CameraCaptureSession} for camera preview.
      */
     private void createCameraPreviewSession() {
+        Util.LogDebug(TAG, "createCameraPreviewSession() " + mPreviewSize.toString());
         try {
             SurfaceTexture texture = mSurfaceTexture;
             assert texture != null;
@@ -576,6 +584,7 @@ public class CameraHandler {
      * Initiate a still image capture.
      */
     private void takePicture() {
+        Util.LogDebug(TAG, "takePicture()");
         lockFocus();
     }
 

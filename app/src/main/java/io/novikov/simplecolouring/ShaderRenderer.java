@@ -1,9 +1,14 @@
 package io.novikov.simplecolouring;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.opengl.GLUtils;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -13,7 +18,9 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class ShaderRenderer implements GLSurfaceView.Renderer
 {
+    private final String TAG = "ShaderRenderer";
     private final Context context;
+    private final AtomicBoolean isUpdateNeeded;
 
     private class GLTexture {
         private int mTextureHandle;
@@ -23,16 +30,53 @@ public class ShaderRenderer implements GLSurfaceView.Renderer
         }
 
         public void init(){
+
             int[] mTextureHandles = new int[1];
             GLES20.glGenTextures(1, mTextureHandles, 0);
             mTextureHandle = mTextureHandles[0];
 
-            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mTextureHandles[0]);
+
+            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mTextureHandle);
             GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
             GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
             GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
             GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        }
 
+        public int loadTexture(final Context context, final int resourceId)
+        {
+            final int[] textureHandle = new int[1];
+
+            GLES20.glGenTextures(1, textureHandle, 0);
+
+            if (textureHandle[0] != 0)
+            {
+                final BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inScaled = false;   // No pre-scaling
+
+                // Read in the resource
+                final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resourceId, options);
+
+                // Bind to the texture in OpenGL
+                GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureHandle[0]);
+
+                // Set filtering
+                GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+                GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+
+                // Load the bitmap into the bound texture.
+                GLUtils.texImage2D(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0, bitmap, 0);
+
+                // Recycle the bitmap, since its data has been loaded into OpenGL.
+                bitmap.recycle();
+            }
+
+            if (textureHandle[0] == 0)
+            {
+                throw new RuntimeException("Error loading texture.");
+            }
+
+            return textureHandle[0];
         }
 
     };
@@ -46,6 +90,11 @@ public class ShaderRenderer implements GLSurfaceView.Renderer
         glTexture = new GLTexture();
         context = view.getContext().getApplicationContext();
         shader = new PassthroughSurfaceShader();
+        isUpdateNeeded = new AtomicBoolean(true);
+    }
+
+    public void updateTexture() {
+        isUpdateNeeded.lazySet(true);
     }
 
     /**
@@ -74,10 +123,11 @@ public class ShaderRenderer implements GLSurfaceView.Renderer
      */
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        Util.LogDebug(TAG, "onSurfaceCreated()");
         GLES20.glClearColor(0.0f, 0.0f, 1.0f, 0.0f);
         shader.init(context);
-        glTexture.init();
-
+        //glTexture.init();
+        glTexture.loadTexture(context, R.mipmap.ic_launcher);
         renderView.onSurfaceCreated(glTexture.getTextureId());
     }
 
@@ -107,7 +157,8 @@ public class ShaderRenderer implements GLSurfaceView.Renderer
      */
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        GLES20.glViewport(0, 0, width, height);
+        Util.LogDebug(TAG, "onSurfaceChanged()");
+        shader.resize(width, height);
         renderView.onSurfaceChanged(width, height);
     }
 
@@ -129,16 +180,11 @@ public class ShaderRenderer implements GLSurfaceView.Renderer
      */
     @Override
     public void onDrawFrame(GL10 gl) {
-
-        renderView.mSurfaceTexture.updateTexImage();
-
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-        GLES20.glEnable(GLES20.GL_TEXTURE0);
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, glTexture.getTextureId());
-
-        shader.draw();
-
+        //Util.LogDebug(TAG, "onDrawFrame");
+        if(isUpdateNeeded.compareAndSet(true, false)) {
+            renderView.updateTexture();
+            shader.draw(glTexture.getTextureId());
+        }
     }
 
 }

@@ -16,12 +16,14 @@ import android.view.Window;
 import android.view.View;
 
 public class ShaderedCamera extends Activity {
+    private final String TAG = "ShaderedCamera";
     private static final int REQUEST_CAMERA_PERMISSION = 1;
 
     RenderView mRenderView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Util.LogDebug(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         int ui = getWindow().getDecorView().getSystemUiVisibility();
@@ -40,6 +42,7 @@ public class ShaderedCamera extends Activity {
     @Override
     protected void onResume()
     {
+        Util.LogDebug(TAG, "onResume()");
         // The activity must call the GL surface view's onResume() on activity onResume().
         super.onResume();
         mRenderView.onResume();
@@ -52,6 +55,7 @@ public class ShaderedCamera extends Activity {
     @Override
     protected void onPause()
     {
+        Util.LogDebug(TAG, "onPause()");
         // The activity must call the GL surface view's onPause() on activity onPause().
         super.onPause();
         mRenderView.onPause();
@@ -70,28 +74,4 @@ public class ShaderedCamera extends Activity {
             }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case REQUEST_CAMERA_PERMISSION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-
-                } else {
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                }
-                return;
-            }
-
-            // other 'case' lines to check for other
-            // permissions this app might request
-        }
-    }
 }
