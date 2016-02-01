@@ -6,8 +6,10 @@ import android.hardware.camera2.CameraAccessException;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.view.Surface;
+import android.view.TextureView;
 
-public class RenderView extends GLSurfaceView implements SurfaceTexture.OnFrameAvailableListener{
+public class RenderView extends GLSurfaceView implements SurfaceTexture.OnFrameAvailableListener
+ {
     final static String TAG = "RenderView";
 
     ShaderRenderer mRenderer;
@@ -29,10 +31,10 @@ public class RenderView extends GLSurfaceView implements SurfaceTexture.OnFrameA
 
         //setDebugFlags(DEBUG_CHECK_GL_ERROR | DEBUG_LOG_GL_CALLS);
 
-        setPreserveEGLContextOnPause(true);
+        //setPreserveEGLContextOnPause(true);
         setEGLContextClientVersion(2);
         setRenderer(mRenderer);
-        setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
 
     public void onSurfaceCreated(int texID) {
@@ -69,9 +71,9 @@ public class RenderView extends GLSurfaceView implements SurfaceTexture.OnFrameA
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
         //Util.LogDebug(TAG, "New frame avalable");
         mRenderer.updateTexture();
-        //requestRender();
+        requestRender();
     }
-/*
+
     @Override
     public void onPause() {
         super.onPause();
@@ -83,5 +85,5 @@ public class RenderView extends GLSurfaceView implements SurfaceTexture.OnFrameA
         super.onResume();
         mRenderer.onResume();
     }
-*/
+
 }

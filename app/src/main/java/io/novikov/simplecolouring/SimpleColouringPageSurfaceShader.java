@@ -8,6 +8,7 @@ import android.opengl.GLES20;
  * Created by al on 1/31/16.
  */
 public class SimpleColouringPageSurfaceShader extends PassthroughSurfaceShader {
+
     private static final String TAG = "SimpleColouringPageSurfaceShader";
 
     @Override
@@ -16,50 +17,62 @@ public class SimpleColouringPageSurfaceShader extends PassthroughSurfaceShader {
                 R.raw.passthrough_vertex_shader);
         final String fragmentShaderCode = Util.readTextFileFromResource(context,
                 R.raw.simple_colouring_page_fragment_shader);
-        programId = Shader.prepareProgram(vertexShaderCode, fragmentShaderCode);
+        mProgram = Shader.prepareProgram(vertexShaderCode, fragmentShaderCode);
     }
 
     @Override
     public void draw(int texId) {
-        //Util.LogDebug(TAG, "draw() started...");
-        // clear Screen
+        // clear Screen and Depth Buffer, we have set the clear color as black.
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        int resSLocation = GLES20.glGetUniformLocation(programId, "resS");
-        GLES20.glUniform1f(resSLocation, 800);
+        int resSLocation = GLES20.glGetUniformLocation(mProgram, "resS");
+        GLES20.glUniform1f(resSLocation, mScreenWidth);
 
-        int resTLocation = GLES20.glGetUniformLocation(programId, "resT");
-        GLES20.glUniform1f(resTLocation, 600);
+        int resTLocation = GLES20.glGetUniformLocation(mProgram, "resT");
+        GLES20.glUniform1f(resTLocation, mScreenHeight);
 
-        int aPositionLocation = GLES20.glGetAttribLocation(programId, "aPosition");
-        GLES20.glEnableVertexAttribArray(aPositionLocation);
+        // get handle to vertex shader's vPosition member
+        int mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
 
-        GLES20.glVertexAttribPointer(aPositionLocation, POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT,
-                false, 0, vertexData);
+        // Enable generic vertex attribute array
+        GLES20.glEnableVertexAttribArray(mPositionHandle);
 
-        // texture coordinates
-        int texCoordLoc = GLES20.glGetAttribLocation(programId, "aTexCoord" );
-        GLES20.glEnableVertexAttribArray ( texCoordLoc );
-        GLES20.glVertexAttribPointer ( texCoordLoc, 2, GLES20.GL_FLOAT, false, 0, uvBuffer);
+        // Prepare the triangle coordinate data
+        GLES20.glVertexAttribPointer(mPositionHandle, 3,
+                GLES20.GL_FLOAT, false,
+                0, vertexBuffer);
 
-/*
-        // Projection and view transformations
-        int mtrxhandle = GLES20.glGetUniformLocation(programId, "uMVPMatrix");
+        // Get handle to texture coordinates location
+        int mTexCoordLoc = GLES20.glGetAttribLocation(mProgram, "a_texCoord");
+
+        // Enable generic vertex attribute array
+        GLES20.glEnableVertexAttribArray(mTexCoordLoc);
+
+        // Prepare the texturecoordinates
+        GLES20.glVertexAttribPointer(mTexCoordLoc, 2, GLES20.GL_FLOAT,
+                false,
+                0, uvBuffer);
+
+        // Get handle to shape's transformation matrix
+        int mtrxhandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+
+        // Apply the projection and view transformation
         GLES20.glUniformMatrix4fv(mtrxhandle, 1, false, mtrxProjectionAndView, 0);
-*/
-        //textures
-        int samplerLoc = GLES20.glGetUniformLocation (programId, "sTexture" );
-        GLES20.glUniform1i(samplerLoc, 0);
 
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texId);
+        // Get handle to textures locations
+        int mSamplerLoc = GLES20.glGetUniformLocation(mProgram, "s_texture");
 
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        GLES20.glFlush();
-        // Disable attribs
-        GLES20.glDisableVertexAttribArray(aPositionLocation);
-        GLES20.glDisableVertexAttribArray(texCoordLoc);
+        // Set the sampler texture unit to 0, where we have saved the texture.
+        GLES20.glUniform1i(mSamplerLoc, 0);
+
+        // Draw the triangle
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, indices.length,
+                GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
+
+        // Disable vertex array
+        GLES20.glDisableVertexAttribArray(mPositionHandle);
+        GLES20.glDisableVertexAttribArray(mTexCoordLoc);
+
         //Util.LogDebug(TAG, "draw() finished!!!");
     }
 }
